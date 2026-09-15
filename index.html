@@ -3,34 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Travel Planning Platform - Interactive Workspace</title>
+    <title>Travel Planning Platform - Workspace</title>
     
-    <!-- Leaflet CSS & JS (Interactive Map Engine) -->
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
         :root {
-            --bg-outer: #eef2f6;
+            --bg-outer: #f8fafc;
             --bg-card: #ffffff;
             --border-light: #e2e8f0;
-            --border-dashed: #cbd5e1;
             --text-dark: #0f172a;
             --text-muted: #64748b;
-            --btn-bg-light: #f1f5f9;
-            --btn-active-bg: #0f172a;
-            --btn-active-text: #ffffff;
             --radius-main: 16px;
             --radius-card: 12px;
             --radius-btn: 20px;
-            --error-red: #000000;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         body {
@@ -51,16 +51,16 @@
 
         /* --- TOP HEADER BAR --- */
         .top-header {
-            background: var(--bg-card);
-            border-radius: var(--radius-main);
-            height: 90px;
-            padding: 0 32px;
+            background: none;
+            border-radius: 0;
+            height: 60px;
+            padding: 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            border: 1px solid var(--border-light);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            border: none;
+            box-shadow: none;
         }
 
         .top-header .brand {
@@ -74,7 +74,6 @@
             text-decoration: none;
         }
 
-        .top-header .brand:hover { opacity: 0.8; }
         .top-header .header-right { display: flex; align-items: center; gap: 16px; }
 
         .top-header .signin-btn, .top-header .signout-btn {
@@ -86,6 +85,23 @@
             cursor: pointer;
         }
 
+        /* Nav Buttons -> No Background Color */
+        .btn-start-travel {
+            background: transparent !important;
+            border: 1px solid #0f172a;
+            color: #0f172a;
+            padding: 8px 20px;
+            border-radius: var(--radius-btn);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s;
+        }
+        .btn-start-travel:hover { background: #f1f5f9 !important; }
+
         .user-profile-badge {
             display: inline-flex;
             align-items: center;
@@ -96,16 +112,18 @@
             font-size: 14px;
             font-weight: 600;
             color: var(--text-dark);
-            background: #ffffff;
+            background: transparent !important;
         }
 
-        .header-logged-out { display: flex; align-items: center; gap: 20px; }
+        /* Dynamic Header Toggle Classes */
+        .header-logged-out { display: flex; align-items: center; gap: 16px; }
         .header-logged-in { display: none; align-items: center; gap: 16px; }
 
-        body.is-logged-in .header-logged-out { display: none !important; }
-        body.is-logged-in .header-logged-in { display: flex !important; }
+        /* Dynamic toggle controlled by updateHeaderState() */
+        body.header-state-logged-in .header-logged-out { display: none !important; }
+        body.header-state-logged-in .header-logged-in { display: flex !important; }
 
-        /* --- MAIN CARD CONTAINER (Padding 32px -> Content Area 1,336px) --- */
+        /* --- MAIN CARD CONTAINER --- */
         .main-card {
             background: var(--bg-card);
             border-radius: var(--radius-main);
@@ -119,7 +137,6 @@
         .screen { display: none; }
         .screen.active { display: block; }
 
-        /* --- UI COMPONENTS & BUTTONS --- */
         .btn-pill {
             background: #ffffff;
             border: 1px solid #000000;
@@ -132,9 +149,7 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            transition: all 0.15s;
         }
-
         .btn-pill:hover { background: #f8fafc; }
 
         .btn-dark {
@@ -146,87 +161,42 @@
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
-            transition: opacity 0.15s;
         }
 
-        .btn-dark:hover { opacity: 0.85; }
-
-        .btn-google {
-            width: 100%;
-            background: #ffffff;
-            border: 1px solid var(--border-light);
-            color: var(--text-dark);
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
+        .custom-pin-bw {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            transition: background-color 0.15s;
-        }
-
-        .btn-google:hover { background: #f8fafc; }
-
-        .btn-light-cancel {
-            background: #e2e8f0;
-            border: none;
-            color: #0f172a;
-            padding: 10px 20px;
-            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            color: white;
+            font-weight: bold;
             font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
+            background-color: #0f172a;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+            border: 2px solid white;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .custom-pin-bw.active-highlight {
+            transform: scale(1.35);
+            background-color: #000000;
+            box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.3), 0 8px 16px rgba(0,0,0,0.3);
+            z-index: 1000 !important;
         }
 
-        .btn-light-cancel:hover { background: #cbd5e1; }
-
-        .btn-tab {
-            background: var(--btn-bg-light);
-            border: 1px solid transparent;
-            color: var(--text-dark);
-            padding: 8px 18px;
-            border-radius: var(--radius-btn);
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+        .card-active {
+            border-color: #0f172a !important;
+            background-color: #f8fafc !important;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
         }
 
-        .btn-tab.active {
-            background: var(--btn-active-bg);
-            color: var(--btn-active-text);
+        .modal-backdrop {
+            background-color: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
         }
 
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: none;
-            border: none;
-            color: var(--text-dark);
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            margin-bottom: 8px;
-        }
-
-        /* --- SCREEN: SIGN IN --- */
-        .signin-wrapper { max-width: 400px; margin: 40px auto; padding: 20px 0; }
-        .signin-wrapper h2 { font-size: 24px; font-weight: 700; margin-bottom: 8px; text-align: center; }
-        .signin-wrapper p.subtitle { font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 28px; }
-        .divider-line { display: flex; align-items: center; text-align: center; margin: 20px 0; color: var(--text-muted); font-size: 12px; }
-        .divider-line::before, .divider-line::after { content: ''; flex: 1; border-bottom: 1px solid var(--border-light); }
-        .divider-line::before { margin-right: 12px; }
-        .divider-line::after { margin-left: 12px; }
-        .error-message { color: var(--text-dark); font-weight: 600; font-size: 12px; margin-top: 4px; display: none; }
-        .form-control.has-error { border-color: #000000; }
-
-        /* --- HOME & MY TRIPS --- */
+        /* Home & Trips */
         .home-country-section { margin-bottom: 32px; }
         .home-country-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
         .home-country-header h2 { font-size: 20px; font-weight: 700; }
@@ -240,7 +210,7 @@
         .home-trip-card:hover, .trip-card-item:hover { border-color: #000000; }
         .home-trip-card h3, .trip-card-item h3 { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
         .home-trip-card p, .trip-card-item p { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
-        
+
         .tag-pill {
             display: inline-block;
             border: 1px solid var(--border-light);
@@ -256,218 +226,12 @@
         .screen-header-flex h1 { font-size: 22px; font-weight: 700; }
         .trips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 
-        /* --- WORKSPACE & TIMELINE MAP INTEGRATION (30 / 70 Layout) --- */
         .workspace-top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-        .workspace-top-bar h1 { font-size: 22px; font-weight: 700; }
-        .tab-group { display: flex; gap: 8px; }
-
-        .day-bar {
-            border: 1px solid var(--border-light);
-            border-radius: var(--radius-card);
-            padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 24px;
-            background: #fafafa;
-        }
-
-        .day-bar label { font-size: 13px; font-weight: 700; margin-right: 8px; }
-
-        .btn-day {
-            background: #ffffff;
-            border: 1px solid var(--border-light);
-            border-radius: var(--radius-card);
-            padding: 8px 16px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            color: var(--text-dark);
-            transition: all 0.15s;
-        }
-
-        .btn-day.active {
-            background: #0f172a;
-            color: #ffffff;
-            border-color: #0f172a;
-        }
-
-        .btn-day-add {
-            border: 1px dashed var(--border-dashed);
-            background: #ffffff;
-            border-radius: var(--radius-card);
-            padding: 8px 16px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .timeline-sub-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-
-        /* Ratio Split: Left 30% / Right 70% */
-        .timeline-grid {
-            display: grid;
-            grid-template-columns: 32% 66%;
-            gap: 2%;
-            align-items: start;
-        }
-
-        /* --- MONOCHROME MAP PIN & BADGE STYLES --- */
-        .custom-pin {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            color: white;
-            font-weight: bold;
-            font-size: 12px;
-            background-color: #0f172a;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            border: 2px solid white;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .custom-pin.active-highlight {
-            transform: scale(1.35);
-            background-color: #000000;
-            box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.3), 0 8px 16px rgba(0,0,0,0.4);
-            z-index: 1000 !important;
-        }
-
-        .badge-mono {
-            background-color: #f1f5f9;
-            color: #0f172a;
-            border: 1px solid #cbd5e1;
-            border-radius: 12px;
-            padding: 2px 10px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        .card-active {
-            border-color: #000000 !important;
-            background-color: #f8fafc !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        .waypoint-card {
-            border: 1px solid var(--border-light);
-            border-radius: var(--radius-card);
-            padding: 16px;
-            margin-bottom: 12px;
-            background: #ffffff;
-            cursor: pointer;
-            transition: all 0.15s;
-            position: relative;
-        }
-
-        .waypoint-card:hover { border-color: #000000; }
-
-        .waypoint-card .time-badge {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .waypoint-card .title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
-        .waypoint-card .note { font-size: 12px; color: var(--text-muted); }
-
-        .segment-info {
-            text-align: center;
-            font-size: 11px;
-            color: var(--text-dark);
-            margin: 10px 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        /* Map Right Pane */
-        .map-box {
-            border: 1px solid var(--border-light);
-            border-radius: var(--radius-card);
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            min-height: 520px;
-            background: #ffffff;
-        }
-
-        #map {
-            width: 100%;
-            height: 440px;
-            border-radius: 8px;
-            border: 1px solid var(--border-light);
-        }
-
-        .map-caption { font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 8px; }
-
-        /* Expenses & Tickets Tables */
-        .expenses-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
-        .summary-card { border: 1px solid var(--border-light); border-radius: var(--radius-card); padding: 16px; }
-        .summary-card h4 { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
-        .summary-card .amount { font-size: 20px; font-weight: 700; }
-        .expense-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-        .expense-table th, .expense-table td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--border-light); font-size: 13px; }
-        .expense-table th { background: var(--btn-bg-light); font-weight: 700; }
-        .group-split-box { border: 1px solid var(--border-light); border-radius: var(--radius-card); padding: 20px 24px; margin-top: 24px; background: #ffffff; }
-        .group-split-box h4 { color: var(--text-dark); font-size: 14px; font-weight: 700; margin-bottom: 8px; }
-        .group-split-box p { font-size: 13px; color: var(--text-dark); margin-bottom: 4px; }
-
-        .vault-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .vault-card { border: 1px solid var(--border-light); border-radius: var(--radius-card); padding: 16px; margin-bottom: 12px; }
-        .vault-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
-        .vault-card p { font-size: 12px; color: var(--text-dark); margin-bottom: 4px; }
-
-        /* Modals & Backdrop */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.4);
-            backdrop-filter: blur(2px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .modal-card {
-            background: #ffffff;
-            border-radius: var(--radius-main);
-            width: 460px;
-            padding: 28px;
-            border: 1px solid var(--border-light);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-
-        .modal-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 20px; color: var(--text-dark); }
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: var(--text-dark); }
-        .form-control {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1px solid var(--border-light);
-            border-radius: 8px;
-            font-size: 13px;
-            outline: none;
-            background: #ffffff;
-            color: var(--text-dark);
-        }
-        .form-control:focus { border-color: #000000; }
-        textarea.form-control { resize: vertical; min-height: 80px; }
-        .form-row-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; }
 
         footer { margin-top: 24px; font-size: 11px; color: var(--text-muted); text-align: center; }
     </style>
 </head>
-<body class="logged-out">
+<body>
 
     <div class="container">
         <!-- TOP HEADER BAR -->
@@ -477,13 +241,13 @@
                 Travel Planning
             </div>
             
-            <!-- STATE 1: LOGGED OUT -->
+            <!-- STATE 1: Displayed on Home, Sign-in Page, or Logged Out State -->
             <div class="header-right header-logged-out">
-                <button class="signin-btn" onclick="showScreen('screen-signin')">Sign In</button>
-                <button class="btn-pill" onclick="showScreen('screen-signin')">Start to Travel →</button>
+                <button class="signin-btn" onclick="showScreen('screen-signin')">Sign in</button>
+                <button class="btn-start-travel" onclick="showScreen('screen-signin')">Start to Travel →</button>
             </div>
 
-            <!-- STATE 2: LOGGED IN -->
+            <!-- STATE 2: Displayed on all inner pages when Logged In (My Trips, Timeline, Expenses, Tickets) -->
             <div class="header-right header-logged-in">
                 <div class="user-profile-badge">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -493,7 +257,7 @@
             </div>
         </div>
 
-        <!-- MAIN CARD CONTAINER (Width: 1,400px | Content Area: 1,336px) -->
+        <!-- MAIN CARD CONTAINER -->
         <div class="main-card">
 
             <!-- ================= SCREEN 0: HOME PAGE ================= -->
@@ -521,59 +285,38 @@
                         <p>Base Currency: JPY | Budget: THB 60,000</p>
                     </div>
                 </div>
-
-                <div class="home-country-section">
-                    <div class="home-country-header">
-                        <h2>Thailand</h2>
-                        <span class="tag-pill">Domestic / Solo</span>
-                    </div>
-                    <div class="home-trip-card" onclick="handleTripClick('Mae Sot Off-Road Expedition')">
-                        <h3>Mae Sot Off-Road Expedition</h3>
-                        <p>Date: 01-05 Nov 2026</p>
-                        <p>Base Currency: THB | Budget: THB 15,000</p>
-                    </div>
-                </div>
             </div>
 
-            <!-- ================= SCREEN: SIGN IN PAGE ================= -->
+            <!-- ================= SCREEN 1: SIGN IN PAGE ================= -->
             <div id="screen-signin" class="screen">
-                <div class="signin-wrapper">
-                    <h2>Sign In</h2>
-                    <p class="subtitle">Access your trips and itinerary workspace</p>
+                <div class="max-w-md mx-auto py-10">
+                    <h2 class="text-2xl font-bold text-center mb-2">Sign In</h2>
+                    <p class="text-xs text-slate-500 text-center mb-6">Access your trips and itinerary workspace</p>
                     
-                    <button class="btn-google" onclick="handleGoogleSignIn()">
+                    <button class="w-full bg-white border border-slate-200 text-slate-800 py-2.5 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 hover:bg-slate-50 transition mb-4" onclick="handleGoogleSignIn()">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><circle cx="12" cy="12" r="3"/></svg>
                         Sign in with Google (Gmail)
                     </button>
 
-                    <div class="divider-line">or sign in with email</div>
-
-                    <form id="signin-form" onsubmit="handleFormSignIn(event)" novalidate>
-                        <div class="form-group">
-                            <label for="signin-email">Email Address <span style="color: #000000">*</span></label>
-                            <input type="email" id="signin-email" class="form-control" placeholder="thosapon@example.com">
-                            <div id="email-error" class="error-message">Please enter a valid email address</div>
+                    <form id="signin-form" onsubmit="handleFormSignIn(event)">
+                        <div class="mb-4">
+                            <label class="block text-xs font-semibold mb-1">Email Address *</label>
+                            <input type="email" id="signin-email" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs" placeholder="thosapon@example.com" required>
                         </div>
-
-                        <div class="form-group">
-                            <label for="signin-password">Password <span style="color: #000000">*</span></label>
-                            <input type="password" id="signin-password" class="form-control" placeholder="••••••••">
-                            <div id="password-error" class="error-message">Password is required</div>
+                        <div class="mb-4">
+                            <label class="block text-xs font-semibold mb-1">Password *</label>
+                            <input type="password" id="signin-password" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs" placeholder="••••••••" required>
                         </div>
-
-                        <button type="submit" class="btn-dark" style="width: 100%; margin-top: 12px; padding: 12px;">Sign In</button>
+                        <button type="submit" class="w-full bg-slate-900 text-white py-2.5 rounded-xl text-xs font-semibold hover:bg-slate-800 transition">Sign In</button>
                     </form>
                 </div>
             </div>
 
-            <!-- ================= SCREEN 1: MY TRIPS ================= -->
+            <!-- ================= SCREEN 2: MY TRIPS ================= -->
             <div id="screen-my-trips" class="screen">
                 <div class="screen-header-flex">
                     <h1>My Trips</h1>
-                    <button class="btn-pill" onclick="openModal('modal-create-trip')">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                        Create Trip
-                    </button>
+                    <button class="btn-pill" onclick="openModal('modal-create-trip')">+ Create Trip</button>
                 </div>
 
                 <div class="trips-grid">
@@ -583,212 +326,160 @@
                         <p>Base Currency: CNY | Budget: THB 60,000</p>
                         <span class="tag-pill">International / Group</span>
                     </div>
-                    <div class="trip-card-item" onclick="openTrip('Tokyo & Fuji Adventure')">
-                        <h3>Tokyo & Fuji Adventure</h3>
-                        <p>Date: 15-22 Oct 2026</p>
-                        <p>Base Currency: JPY | Budget: THB 60,000</p>
-                        <span class="tag-pill">International / Group</span>
-                    </div>
-                    <div class="trip-card-item" onclick="openTrip('Mae Sot Off-Road Expedition')">
-                        <h3>Mae Sot Off-Road Expedition</h3>
-                        <p>Date: 01-05 Nov 2026</p>
-                        <p>Base Currency: THB | Budget: THB 15,000</p>
-                        <span class="tag-pill">Domestic / Solo</span>
-                    </div>
                 </div>
             </div>
 
-            <!-- ================= SCREEN 2: TIMELINE WORKSPACE ================= -->
+            <!-- ================= SCREEN 3: TIMELINE ACTIVE ================= -->
             <div id="screen-timeline" class="screen">
-                <button class="back-link" onclick="showScreen('screen-my-trips')">
+                <button class="text-xs font-medium text-slate-500 hover:text-slate-800 transition mb-2 inline-block" onclick="showScreen('screen-my-trips')">
                     ← My Trips
                 </button>
                 
                 <div class="workspace-top-bar">
-                    <h1 class="active-trip-title">China Amazing Zhangjiajie</h1>
-                    <div class="tab-group">
-                        <button class="btn-tab active" onclick="showScreen('screen-timeline')">
-                            Timeline 
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        </button>
-                        <button class="btn-tab" onclick="showScreen('screen-expenses')">
-                            Expenses
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                        </button>
-                        <button class="btn-tab" onclick="showScreen('screen-tickets')">
-                            Tickets & Bookings
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
-                        </button>
+                    <h1 class="active-trip-title text-2xl font-bold text-slate-900">China Amazing Zhangjiajie</h1>
+                    <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-full text-xs font-semibold">
+                        <button class="bg-slate-900 text-white px-4 py-2 rounded-full shadow-sm" onclick="showScreen('screen-timeline')">Timeline</button>
+                        <button class="text-slate-600 hover:text-slate-900 px-4 py-2 rounded-full transition" onclick="showScreen('screen-expenses')">Expenses</button>
+                        <button class="text-slate-600 hover:text-slate-900 px-4 py-2 rounded-full transition" onclick="showScreen('screen-tickets')">Tickets</button>
                     </div>
                 </div>
 
                 <!-- Day Selector Bar -->
-                <div class="day-bar">
-                    <label>Select Day:</label>
-                    <div id="dayTabsContainer" style="display: flex; gap: 8px;"></div>
-                    <button class="btn-day-add" onclick="openAddDayModal()">+ Add Day</button>
+                <div class="flex items-center justify-between border border-slate-200/80 rounded-xl p-3 mb-6 bg-slate-50/50 gap-2">
+                  <div class="flex items-center gap-2 overflow-x-auto" id="dayTabsContainer">
+                    <span class="text-xs font-semibold text-slate-500 pl-2 pr-1 shrink-0">Select Day:</span>
+                  </div>
+                  
+                  <button onclick="openAddDayModal()" class="text-xs font-semibold text-slate-800 bg-white border border-slate-300 px-3.5 py-1.5 rounded-lg border-dashed transition shrink-0 flex items-center gap-1 hover:bg-slate-50">
+                    <span>+</span> Add Day
+                  </button>
                 </div>
 
-                <div class="timeline-sub-header">
-                    <h3 class="active-trip-title" style="font-size: 14px; font-weight: 700;">China Amazing Zhangjiajie</h3>
-                    <div style="display: flex; gap: 6px;">
-                        <button class="btn-pill" style="padding: 4px 12px; font-size: 12px;" onclick="openAddActivityModal()">+ Add Activity</button>
-                        <button class="btn-pill" style="padding: 4px 12px; font-size: 12px;" onclick="openEditDayModal()">✏️ Edit Day</button>
-                        <button class="btn-pill" style="padding: 4px 12px; font-size: 12px; border-color:#000;" onclick="handleDeleteCurrentDay()">🗑️ Delete Day</button>
-                    </div>
-                </div>
+                <!-- 30% / 70% Layout Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start min-h-[560px]">
+                  
+                  <!-- Left: 30% Timeline Cards -->
+                  <div class="lg:col-span-4 flex flex-col justify-start self-start space-y-4">
+                    <div class="flex items-center justify-between gap-2">
+                      <h2 class="text-xs font-bold text-slate-900 uppercase tracking-wider" id="timelineTitle">DAY 1: TOKYO HIGHLIGHTS</h2>
+                      
+                      <div class="relative flex items-center gap-2">
+                        <button onclick="openAddActivityModal()" class="text-xs font-semibold bg-slate-900 hover:bg-black text-white px-3 py-1.5 rounded-full transition shadow-sm flex items-center gap-1">
+                          <span>+</span> Add Activity
+                        </button>
+                        
+                        <button onclick="toggleDayMenu()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs transition">
+                          •••
+                        </button>
 
-                <div class="timeline-grid">
-                    <!-- Left: Timeline Waypoints (30%) -->
-                    <div>
-                        <div id="timelineContainer"></div>
-                    </div>
-
-                    <!-- Right: Interactive Leaflet Map (70%) -->
-                    <div class="map-box">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <h3 style="font-size: 13px; font-weight: 700;">Interactive Maps</h3>
-                            <button onclick="recenterMap()" class="btn-pill" style="padding: 2px 8px; font-size: 11px;">🎯 Focus All</button>
+                        <div id="dayActionMenu" class="hidden absolute right-0 top-10 w-36 bg-white border border-slate-200 rounded-xl shadow-lg z-30 py-1 text-xs">
+                          <button onclick="openEditDayModal(); toggleDayMenu();" class="w-full text-left px-3 py-2 hover:bg-slate-50 text-slate-700">✏️ Edit Day</button>
+                          <button onclick="handleDeleteCurrentDay(); toggleDayMenu();" class="w-full text-left px-3 py-2 hover:bg-slate-100 text-slate-900 font-semibold">🗑️ Delete Day</button>
                         </div>
-                        <div id="map"></div>
-                        <span class="map-caption">Map pins update instantly when switching Day Tabs</span>
+                      </div>
                     </div>
+
+                    <div id="timelineContainer" class="space-y-3 overflow-y-auto max-h-[580px] pr-1">
+                      <!-- Dynamically rendered cards -->
+                    </div>
+                  </div>
+
+                  <!-- Right: 70% Interactive Map -->
+                  <div class="lg:col-span-8 border border-slate-200/80 rounded-2xl p-4 flex flex-col bg-slate-50/60 relative min-h-[580px]">
+                    <div class="flex justify-between items-center mb-3 z-10 bg-white/90 backdrop-blur-md p-2.5 rounded-xl border border-slate-200/80 shadow-xs">
+                      <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-slate-900"></span>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-700">INTERACTIVE MAP</span>
+                      </div>
+                      <button onclick="recenterMap()" class="text-[11px] font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-3 py-1 rounded-lg transition shadow-xs">🎯 Focus All</button>
+                    </div>
+
+                    <div id="map" class="w-full h-full rounded-xl z-0 border border-slate-200/80 min-h-[500px]"></div>
+                  </div>
+
                 </div>
             </div>
 
-            <!-- ================= SCREEN 3: EXPENSES WORKSPACE ================= -->
+            <!-- ================= SCREEN 4: EXPENSES ACTIVE ================= -->
             <div id="screen-expenses" class="screen">
-                <button class="back-link" onclick="showScreen('screen-my-trips')">
+                <button class="text-xs font-medium text-slate-500 hover:text-slate-800 transition mb-2 inline-block" onclick="showScreen('screen-my-trips')">
                     ← My Trips
                 </button>
                 
                 <div class="workspace-top-bar">
-                    <h1 class="active-trip-title">China Amazing Zhangjiajie</h1>
-                    <div class="tab-group">
-                        <button class="btn-tab" onclick="showScreen('screen-timeline')">
-                            Timeline 
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        </button>
-                        <button class="btn-tab active" onclick="showScreen('screen-expenses')">
-                            Expenses
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                        </button>
-                        <button class="btn-tab" onclick="showScreen('screen-tickets')">
-                            Tickets & Bookings
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
-                        </button>
+                    <h1 class="active-trip-title text-2xl font-bold text-slate-900">China Amazing Zhangjiajie</h1>
+                    <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-full text-xs font-semibold">
+                        <button class="text-slate-600 hover:text-slate-900 px-4 py-2 rounded-full transition" onclick="showScreen('screen-timeline')">Timeline</button>
+                        <button class="bg-slate-900 text-white px-4 py-2 rounded-full shadow-sm" onclick="showScreen('screen-expenses')">Expenses</button>
+                        <button class="text-slate-600 hover:text-slate-900 px-4 py-2 rounded-full transition" onclick="showScreen('screen-tickets')">Tickets</button>
                     </div>
                 </div>
 
-                <div class="expenses-summary">
-                    <div class="summary-card">
-                        <h4>Total Budget Summary</h4>
-                        <div class="amount">THB 45,000 / THB 60,000</div>
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    <div class="lg:col-span-4 space-y-4">
+                        <div class="border border-slate-200 rounded-2xl p-5 bg-slate-50/60">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Total Budget Summary</h4>
+                            <div class="text-xl font-bold text-slate-900 mb-4" id="expenseTotalSum">THB 5,990 / THB 60,000</div>
+                            <div class="text-xs text-slate-500">Multi-Currency Engine: <span class="font-semibold text-slate-700">1 JPY = 0.24 THB</span></div>
+                        </div>
+
+                        <div class="border border-slate-200 rounded-2xl p-5 bg-white">
+                            <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Group Settlement Summary</h4>
+                            <p class="text-xs text-slate-600 mb-1">• Shared Group Spend: <strong class="text-slate-900">THB 3,960</strong></p>
+                            <p class="text-xs text-slate-500">• Equal Split (4 members): <strong>THB 990 / person</strong></p>
+                        </div>
                     </div>
-                    <div class="summary-card">
-                        <h4>Multi-Currency Converter Engine</h4>
-                        <div class="amount">1 JPY = 0.24 THB</div>
+
+                    <div class="lg:col-span-8 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-xs font-bold text-slate-900 uppercase tracking-wider">TRIP EXPENSE LEDGER</h2>
+                            <button onclick="openAddExpenseModal()" class="text-xs font-semibold bg-slate-900 hover:bg-black text-white px-3 py-1.5 rounded-full transition shadow-sm">
+                              + Add Expense
+                            </button>
+                        </div>
+
+                        <div id="expensesContainer" class="space-y-3">
+                            <!-- Dynamically Rendered Expenses -->
+                        </div>
                     </div>
-                </div>
-
-                <div class="screen-header-flex" style="margin-bottom: 8px;">
-                    <h3 style="font-size: 14px; font-weight: 700;">Trip Expense Ledger</h3>
-                    <button class="btn-pill" onclick="openModal('modal-add-expense')">+ Add New Expense</button>
-                </div>
-
-                <table class="expense-table">
-                    <thead>
-                        <tr>
-                            <th>Item Name</th>
-                            <th>Local Amount</th>
-                            <th>THB Equiv.</th>
-                            <th>Split Type</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Motorcycle Fuel (Day 1)</td>
-                            <td>4,500 JPY</td>
-                            <td><strong>THB 1,080</strong></td>
-                            <td><span class="badge-mono">Group (Split)</span></td>
-                        </tr>
-                        <tr>
-                            <td>Shinjuku Group Dinner</td>
-                            <td>12,000 JPY</td>
-                            <td><strong>THB 2,880</strong></td>
-                            <td><span class="badge-mono">Group (Split)</span></td>
-                        </tr>
-                        <tr>
-                            <td>Personal Souvenirs</td>
-                            <td>8,500 JPY</td>
-                            <td><strong>THB 2,040</strong></td>
-                            <td><span class="badge-mono">Personal</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <div class="group-split-box">
-                    <h4>Group Trip Leader Split Summary:</h4>
-                    <p>• Total Shared Group Spend: THB 3,960 (Split among 4 members = THB 990 / person)</p>
-                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 0;">• Export breakdown directly to LINE Group for quick settlement</p>
                 </div>
             </div>
 
-            <!-- ================= SCREEN 4: TICKETS & BOOKINGS WORKSPACE ================= -->
+            <!-- ================= SCREEN 5: TICKETS ACTIVE ================= -->
             <div id="screen-tickets" class="screen">
-                <button class="back-link" onclick="showScreen('screen-my-trips')">
+                <button class="text-xs font-medium text-slate-500 hover:text-slate-800 transition mb-2 inline-block" onclick="showScreen('screen-my-trips')">
                     ← My Trips
                 </button>
                 
                 <div class="workspace-top-bar">
-                    <h1 class="active-trip-title">China Amazing Zhangjiajie</h1>
-                    <div class="tab-group">
-                        <button class="btn-tab" onclick="showScreen('screen-timeline')">
-                            Timeline 
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        </button>
-                        <button class="btn-tab" onclick="showScreen('screen-expenses')">
-                            Expenses
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                        </button>
-                        <button class="btn-tab active" onclick="showScreen('screen-tickets')">
-                            Tickets & Bookings
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/></svg>
-                        </button>
+                    <h1 class="active-trip-title text-2xl font-bold text-slate-900">China Amazing Zhangjiajie</h1>
+                    <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-full text-xs font-semibold">
+                        <button class="text-slate-600 hover:text-slate-900 px-4 py-2 rounded-full transition" onclick="showScreen('screen-timeline')">Timeline</button>
+                        <button class="text-slate-600 hover:text-slate-900 px-4 py-2 rounded-full transition" onclick="showScreen('screen-expenses')">Expenses</button>
+                        <button class="bg-slate-900 text-white px-4 py-2 rounded-full shadow-sm" onclick="showScreen('screen-tickets')">Tickets</button>
                     </div>
                 </div>
 
-                <div class="screen-header-flex" style="margin-bottom: 16px;">
-                    <h3 style="font-size: 15px;">Booking Reference Vault</h3>
-                    <button class="btn-pill" onclick="openModal('modal-add-booking')">+ Add New Ticket</button>
-                </div>
-
-                <div class="vault-grid">
-                    <div>
-                        <div class="vault-card">
-                            <h4>Flight Information</h4>
-                            <p>• Airline: Thai Airways (TG640)</p>
-                            <p>• PNR / Booking ID: <strong>#XYZ-9821</strong></p>
-                            <p>• Time: BKK (01:05) -> NRT (09:00)</p>
-                        </div>
-                        <div class="vault-card">
-                            <h4>Hotel & Lodging</h4>
-                            <p>• Shinjuku Granbell Hotel</p>
-                            <p>• Confirm No: <strong>Agoda #8712391</strong></p>
-                            <p>• Check-in: 15 Oct (15:00) | Check-out: 18 Oct (11:00)</p>
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    <div class="lg:col-span-4 space-y-4">
+                        <div class="border border-slate-200 rounded-2xl p-5 bg-slate-50/60 space-y-3">
+                            <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider">Packing Checklist</h4>
+                            <label class="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" checked class="rounded border-slate-300"> Passport (valid > 6 months)</label>
+                            <label class="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" checked class="rounded border-slate-300"> Universal Power Adapter</label>
+                            <label class="flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" class="rounded border-slate-300"> Travel Insurance Policy</label>
                         </div>
                     </div>
-                    <div>
-                        <div class="vault-card">
-                            <h4>Packing Checklist</h4>
-                            <p><input type="checkbox" checked> Passport (valid > 6 months)</p>
-                            <p><input type="checkbox" checked> Universal Power Adapter</p>
-                            <p><input type="checkbox" checked> Personal Medication Kit</p>
+
+                    <div class="lg:col-span-8 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-xs font-bold text-slate-900 uppercase tracking-wider">BOOKING REFERENCE VAULT</h2>
+                            <button onclick="openAddTicketModal()" class="text-xs font-semibold bg-slate-900 hover:bg-black text-white px-3 py-1.5 rounded-full transition shadow-sm">
+                              + Add New Ticket
+                            </button>
                         </div>
-                        <div class="vault-card">
-                            <h4>Important Travel Notes</h4>
-                            <p>• Embassy Contact: +81-3-5789-2449</p>
-                            <p>• Travel Insurance: MSIG #88123-A</p>
+
+                        <div id="ticketsContainer" class="space-y-3">
+                            <!-- Dynamically Rendered Tickets -->
                         </div>
                     </div>
                 </div>
@@ -796,120 +487,208 @@
 
         </div>
 
-        <footer>
-            © 2026 project-24. Built with love for traveling
-        </footer>
+        <footer>© 2026 project-24. Built with love for traveling</footer>
     </div>
 
-    <!-- ================= MODALS ================= -->
-    <div id="modal-create-trip" class="modal-overlay">
-        <div class="modal-card">
-            <h3>Create New Trip</h3>
-            <div class="form-group"><label>Trip Name:</label><input type="text" class="form-control" value="e.g. Tokyo & Fuji Adventure"></div>
-            <div class="form-group"><label>Date Range:</label><input type="text" class="form-control" value="15 Oct 2026 - 22 Oct 2026"></div>
-            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;">
-                <button class="btn-light-cancel" onclick="closeModal('modal-create-trip')">Cancel</button>
-                <button class="btn-dark" onclick="closeModal('modal-create-trip')">Create Workspace</button>
-            </div>
+  <!-- ================= MODALS ================= -->
+  <div id="dayModal" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-base font-bold text-slate-900" id="dayModalTitle">Add New Day</h3>
+        <button onclick="closeModal('dayModal')" class="text-slate-400 hover:text-slate-600 text-sm font-bold p-1">✕</button>
+      </div>
+
+      <form onsubmit="handleSaveDay(event)" class="space-y-4">
+        <input type="hidden" id="dayFormMode" value="add" />
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Select Date</label>
+          <input type="date" id="dayFormDate" value="2026-10-17" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800" required />
         </div>
-    </div>
-
-    <div id="dayModal" class="modal-overlay">
-        <div class="modal-card">
-            <h3 id="dayModalTitle">Add New Day</h3>
-            <form onsubmit="handleSaveDay(event)">
-                <input type="hidden" id="dayFormMode" value="add" />
-                <div class="form-group"><label>Select Date:</label><input type="date" id="dayFormDate" value="2026-10-17" class="form-control" required /></div>
-                <div class="form-group"><label>Day Title / Theme:</label><input type="text" id="dayFormTitle" placeholder="e.g. Akihabara Shopping" class="form-control" /></div>
-                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;">
-                    <button type="button" class="btn-light-cancel" onclick="closeModal('dayModal')">Cancel</button>
-                    <button type="submit" class="btn-dark">Save Day</button>
-                </div>
-            </form>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Day Title / Theme</label>
+          <input type="text" id="dayFormTitle" placeholder="e.g. TOKYO HIGHLIGHTS" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800" />
         </div>
-    </div>
-
-    <div id="activityModal" class="modal-overlay">
-        <div class="modal-card">
-            <h3 id="activityModalTitle">Add Activity</h3>
-            <form onsubmit="handleSaveActivity(event)">
-                <input type="hidden" id="actFormMode" value="add" />
-                <input type="hidden" id="actEditIndex" value="" />
-                <div class="form-group"><label>Time:</label><input type="text" id="actTime" value="11:30 AM" class="form-control" required /></div>
-                <div class="form-group"><label>Category Label:</label><input type="text" id="actCat" value="Flight TG640" class="form-control" required /></div>
-                <div class="form-group"><label>Activity / Location Name:</label><input type="text" id="actName" value="Suvarnabhumi Airport -> Narita (NRT)" class="form-control" required /></div>
-                <div class="form-group"><label>Note:</label><input type="text" id="actNote" value="Note: Ticket details stored in Tickets & Bookings" class="form-control" /></div>
-                <div class="form-group">
-                    <label>Map Location Preset:</label>
-                    <select id="actPresetCoords" class="form-control">
-                        <option value="35.771986,140.392856">Narita International Airport (NRT)</option>
-                        <option value="35.692605,139.702747">Ichiran Ramen Shinjuku</option>
-                        <option value="35.697775,139.706786">Shinjuku Granbell Hotel</option>
-                    </select>
-                </div>
-                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;">
-                    <button type="button" class="btn-light-cancel" onclick="closeModal('activityModal')">Cancel</button>
-                    <button type="submit" class="btn-dark">Save Activity</button>
-                </div>
-            </form>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('dayModal')" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
+          <button type="submit" class="px-5 py-2 text-xs font-semibold bg-slate-900 text-white rounded-xl hover:bg-black shadow-sm">Save Day</button>
         </div>
+      </form>
     </div>
+  </div>
 
-    <div id="modal-add-expense" class="modal-overlay">
-        <div class="modal-card">
-            <h3>Add New Expense</h3>
-            <div class="form-group"><label>Item Name:</label><input type="text" class="form-control" placeholder="Gasoline / Dinner"></div>
-            <div class="form-group"><label>Amount (JPY):</label><input type="text" class="form-control" placeholder="5000"></div>
-            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;">
-                <button class="btn-light-cancel" onclick="closeModal('modal-add-expense')">Cancel</button>
-                <button class="btn-dark" onclick="closeModal('modal-add-expense')">Save Expense</button>
-            </div>
+  <div id="activityModal" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-base font-bold text-slate-900" id="activityModalTitle">Add Activity</h3>
+        <button onclick="closeModal('activityModal')" class="text-slate-400 hover:text-slate-600 text-sm font-bold p-1">✕</button>
+      </div>
+
+      <form onsubmit="handleSaveActivity(event)" class="space-y-4">
+        <input type="hidden" id="actFormMode" value="add" />
+        <input type="hidden" id="actEditIndex" value="" />
+        
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Time</label>
+            <input type="text" id="actTime" placeholder="e.g. 11:00 AM" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs" required />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Category Badge Label</label>
+            <input type="text" id="actCat" placeholder="e.g. Flight TG640, Food" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs" required />
+          </div>
         </div>
-    </div>
 
-    <div id="modal-add-booking" class="modal-overlay">
-        <div class="modal-card">
-            <h3>Add Ticket / Booking Reference</h3>
-            <div class="form-group"><label>Title:</label><input type="text" class="form-control" placeholder="Flight / Hotel / Train Pass"></div>
-            <div class="form-group"><label>PNR / Booking Ref:</label><input type="text" class="form-control" placeholder="#XYZ-9821"></div>
-            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;">
-                <button class="btn-light-cancel" onclick="closeModal('modal-add-booking')">Cancel</button>
-                <button class="btn-dark" onclick="closeModal('modal-add-booking')">Save Booking</button>
-            </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Location / Activity Name</label>
+          <input type="text" id="actName" placeholder="e.g. Narita International Airport (NRT)" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs" required />
         </div>
-    </div>
 
-    <!-- JavaScript Controls -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Note (Optional)</label>
+          <input type="text" id="actNote" placeholder="e.g. Arrival & Pick up JR Pass" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Map Location Preset</label>
+          <select id="actPresetCoords" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs bg-white">
+            <option value="35.771986,140.392856">Narita International Airport (NRT)</option>
+            <option value="35.692605,139.702747">Ichiran Ramen Shinjuku</option>
+            <option value="35.697775,139.706786">Shinjuku Granbell Hotel</option>
+          </select>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('activityModal')" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
+          <button type="submit" class="px-5 py-2 text-xs font-semibold bg-slate-900 text-white rounded-xl hover:bg-black shadow-sm">Save Activity</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="expenseModal" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-base font-bold text-slate-900" id="expModalTitle">Add Expense Item</h3>
+        <button onclick="closeModal('expenseModal')" class="text-slate-400 hover:text-slate-600 text-sm font-bold p-1">✕</button>
+      </div>
+
+      <form onsubmit="handleSaveExpense(event)" class="space-y-4">
+        <input type="hidden" id="expFormMode" value="add" />
+        <input type="hidden" id="expEditIndex" value="" />
+        
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Item Description</label>
+          <input type="text" id="expName" placeholder="e.g. Motorcycle Fuel" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs" required />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Amount (Local Currency)</label>
+            <input type="text" id="expAmount" placeholder="e.g. 4,500 JPY" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs" required />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Equivalent (THB)</label>
+            <input type="text" id="expTHB" placeholder="e.g. THB 1,080" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs" required />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Split Category</label>
+          <input type="text" id="expTag" placeholder="e.g. Group (Split) or Personal" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs" required />
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('expenseModal')" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
+          <button type="submit" class="px-5 py-2 text-xs font-semibold bg-slate-900 text-white rounded-xl hover:bg-black shadow-sm">Save Expense</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="ticketModal" class="hidden fixed inset-0 modal-backdrop flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-base font-bold text-slate-900" id="ticketModalTitle">Add Booking Reference</h3>
+        <button onclick="closeModal('ticketModal')" class="text-slate-400 hover:text-slate-600 text-sm font-bold p-1">✕</button>
+      </div>
+
+      <form onsubmit="handleSaveTicket(event)" class="space-y-4">
+        <input type="hidden" id="ticketFormMode" value="add" />
+        <input type="hidden" id="ticketEditIndex" value="" />
+        
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Title / Service Provider</label>
+          <input type="text" id="ticketTitle" placeholder="e.g. Thai Airways (TG640)" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs" required />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Category Tag</label>
+          <input type="text" id="ticketTag" placeholder="e.g. Flight or Hotel" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs" required />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Reference Number / PNR</label>
+          <input type="text" id="ticketRef" placeholder="e.g. PNR: #XYZ-9821" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs" required />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Notes / Details</label>
+          <input type="text" id="ticketNote" placeholder="e.g. Check-in 15:00" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs" />
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('ticketModal')" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
+          <button type="submit" class="px-5 py-2 text-xs font-semibold bg-slate-900 text-white rounded-xl hover:bg-black shadow-sm">Save Booking</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+    <!-- JavaScript Master Script -->
     <script>
         let isLoggedIn = false;
+        let currentScreenId = 'screen-home';
         let selectedTripTitle = 'China Amazing Zhangjiajie';
 
         const tripData = {
           1: {
             dateStr: "15 Oct",
             rawDate: "2026-10-15",
-            title: "China Amazing Zhangjiajie",
+            title: "DAY 1: TOKYO HIGHLIGHTS",
             items: [
-              { id: 1, time: "09:00 AM", cat: "Flight TG640", name: "Suvarnabhumi Airport -> Narita (NRT)", note: "Note: Ticket details stored in Tickets & Bookings", coords: [35.771986, 140.392856] },
-              { id: 2, time: "12:30 PM", cat: "Food Ramen Shop", name: "Ichiran Ramen Shinjuku Branch", note: "Note: Reserved under name Thos", coords: [35.692605, 139.702747] },
+              { id: 1, time: "09:00 AM", cat: "Flight TG640", name: "Narita International Airport (NRT)", note: "Arrival & Pick up JR Pass", coords: [35.771986, 140.392856] },
+              { id: 2, time: "12:30 PM", cat: "Food Ramen", name: "Ichiran Ramen Shinjuku", note: "Reserved under name Thos", coords: [35.692605, 139.702747] },
               { id: 3, time: "15:00 PM", cat: "Lodging Hotel", name: "Shinjuku Granbell Hotel", note: "Check-in starting at 15:00", coords: [35.697775, 139.706786] }
             ]
           },
           2: {
             dateStr: "16 Oct",
             rawDate: "2026-10-16",
-            title: "Day 2: Shinjuku & Shibuya Tour",
+            title: "DAY 2: SHINJUKU & SHIBUYA",
             items: [
               { id: 1, time: "10:00 AM", cat: "Sightseeing", name: "Shinjuku Gyoen National Garden", note: "Entrance fee ¥500", coords: [35.685176, 139.710052] }
             ]
           }
         };
 
+        const expensesData = [
+          { id: 1, name: "Motorcycle Fuel (Day 1)", amount: "4,500 JPY", thb: "THB 1,080", tag: "Group (Split)" },
+          { id: 2, name: "Shinjuku Group Dinner", amount: "12,000 JPY", thb: "THB 2,880", tag: "Group (Split)" },
+          { id: 3, name: "Personal Souvenirs", amount: "8,500 JPY", thb: "THB 2,040", tag: "Personal" }
+        ];
+
+        const ticketsData = [
+          { id: 1, title: "Thai Airways (TG640)", tag: "Flight", ref: "PNR: #XYZ-9821", note: "BKK (01:05) -> NRT (09:00)" },
+          { id: 2, title: "Shinjuku Granbell Hotel", tag: "Hotel", ref: "Agoda Ref: #8712391", note: "Check-in: 15 Oct (15:00) | Check-out: 18 Oct" }
+        ];
+
         let currentDay = 1;
         let totalDays = 2;
+        let activeMenuId = null;
         let map, markersGroup, routeLine;
 
         function showScreen(screenId) {
+            currentScreenId = screenId;
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
             updateHeaderState();
@@ -919,12 +698,26 @@
                     if (!map) initMap();
                     else map.invalidateSize();
                 }, 100);
+            } else if (screenId === 'screen-expenses') {
+                renderExpenses();
+            } else if (screenId === 'screen-tickets') {
+                renderTickets();
             }
         }
 
+        /* 
+           NAV TOP RIGHT-SIDE CONDITIONAL TOGGLE:
+           1. Screen Home / Screen Signin / Sign Out State -> Show "Sign in" & "Start to Travel ->"
+           2. All remaining inner screens when logged in -> Show "[ Thosapon ]" & "Sign out"
+        */
         function updateHeaderState() {
-            if (isLoggedIn) document.body.classList.add('is-logged-in');
-            else document.body.classList.remove('is-logged-in');
+            const isPublicPage = (currentScreenId === 'screen-home' || currentScreenId === 'screen-signin');
+            
+            if (isLoggedIn && !isPublicPage) {
+                document.body.classList.add('header-state-logged-in');
+            } else {
+                document.body.classList.remove('header-state-logged-in');
+            }
         }
 
         function handleTripClick(tripTitle) {
@@ -940,29 +733,28 @@
             showScreen('screen-timeline');
         }
 
-        function handleGoogleSignIn() { isLoggedIn = true; showScreen('screen-my-trips'); }
-        function handleFormSignIn(event) {
-            event.preventDefault();
-            const emailInput = document.getElementById('signin-email');
-            const passwordInput = document.getElementById('signin-password');
-            if (emailInput.value && passwordInput.value) {
-                isLoggedIn = true;
-                showScreen('screen-my-trips');
-            }
+        function handleGoogleSignIn() { 
+            isLoggedIn = true; 
+            showScreen('screen-my-trips'); 
         }
-        function handleSignOut() { isLoggedIn = false; showScreen('screen-home'); }
 
-        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function handleFormSignIn(event) { 
+            event.preventDefault(); 
+            isLoggedIn = true; 
+            showScreen('screen-my-trips'); 
+        }
+
+        function handleSignOut() { 
+            isLoggedIn = false; 
+            showScreen('screen-home'); 
+        }
+
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
         function initMap() {
           map = L.map('map', { zoomControl: false }).setView([35.6762, 139.6503], 11);
-          
-          L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            maxZoom: 19,
-            attribution: '&copy; OpenStreetMap'
-          }).addTo(map);
-
+          L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
           L.control.zoom({ position: 'topright' }).addTo(map);
           markersGroup = L.featureGroup().addTo(map);
 
@@ -970,9 +762,25 @@
           renderItinerary(currentDay);
         }
 
+        function toggleDayMenu() {
+          document.getElementById('dayActionMenu').classList.toggle('hidden');
+        }
+
+        function toggleItemMenu(menuId) {
+          if (activeMenuId && activeMenuId !== menuId) {
+            const prev = document.getElementById(activeMenuId);
+            if (prev) prev.classList.add('hidden');
+          }
+          const curr = document.getElementById(menuId);
+          if (curr) {
+            curr.classList.toggle('hidden');
+            activeMenuId = curr.classList.contains('hidden') ? null : menuId;
+          }
+        }
+
         function renderDayTabs() {
           const container = document.getElementById('dayTabsContainer');
-          container.innerHTML = '';
+          container.innerHTML = `<span class="text-xs font-semibold text-slate-500 pl-2 pr-1 shrink-0">Select Day:</span>`;
 
           Object.keys(tripData).forEach(dayNum => {
             const d = tripData[dayNum];
@@ -980,7 +788,10 @@
             
             const btn = document.createElement('button');
             btn.onclick = () => switchDay(parseInt(dayNum));
-            btn.className = isActive ? "btn-day active" : "btn-day";
+            btn.className = isActive 
+              ? "day-tab bg-slate-900 text-white font-semibold px-3.5 py-1.5 rounded-xl text-xs transition shadow-sm shrink-0 flex items-center gap-1"
+              : "day-tab bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium px-3.5 py-1.5 rounded-xl text-xs transition shrink-0";
+            
             btn.innerHTML = `${isActive ? '✓ ' : ''}Day ${dayNum} [ ${d.dateStr} ]`;
             container.appendChild(btn);
           });
@@ -993,16 +804,12 @@
           const data = tripData[day];
           if (!data) return;
 
+          document.getElementById('timelineTitle').innerText = data.title;
           const timelineEl = document.getElementById('timelineContainer');
           timelineEl.innerHTML = '';
           
           markersGroup.clearLayers();
           if (routeLine) map.removeLayer(routeLine);
-
-          if (!data.items || data.items.length === 0) {
-            timelineEl.innerHTML = `<div style="text-align:center; padding: 24px; color: var(--text-muted); border: 1px dashed var(--border-dashed); border-radius:12px;">No activities added for Day ${day} yet.</div>`;
-            return;
-          }
 
           const latLngs = [];
 
@@ -1012,20 +819,26 @@
 
             const card = document.createElement('div');
             card.id = `card-${item.id}`;
-            card.className = `waypoint-card`;
+            card.className = `border border-slate-200/80 rounded-2xl p-4 bg-white transition-all cursor-pointer hover:border-slate-800 relative`;
 
             card.innerHTML = `
-              <div class="time-badge">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                ${item.time}
-                <span class="badge-mono">${item.cat}</span>
-                <div style="margin-left: auto; display: flex; gap: 4px;">
-                  <button onclick="event.stopPropagation(); openEditActivityModal(${index})" style="background:none; border:none; cursor:pointer;">✏️</button>
-                  <button onclick="event.stopPropagation(); handleDeleteActivity(${index})" style="background:none; border:none; cursor:pointer;">🗑️</button>
+              <div class="flex items-center justify-between mb-1.5">
+                <div class="flex items-center gap-2">
+                  <span class="w-5 h-5 rounded-full bg-slate-900 text-white text-[11px] font-bold flex items-center justify-center shrink-0">${item.id}</span>
+                  <span class="text-xs font-bold text-slate-900">🕒 ${item.time}</span>
+                  <span class="text-[10px] bg-slate-100 text-slate-800 border border-slate-200 px-2 py-0.5 rounded-full font-semibold">${item.cat}</span>
+                </div>
+                
+                <div class="relative">
+                  <button onclick="event.stopPropagation(); toggleItemMenu('actMenu-${index}')" class="p-1 text-slate-400 hover:text-slate-700 font-bold text-xs rounded">•••</button>
+                  <div id="actMenu-${index}" class="hidden absolute right-0 top-6 w-28 bg-white border border-slate-200 rounded-xl shadow-md z-30 py-1 text-xs">
+                    <button onclick="event.stopPropagation(); openEditActivityModal(${index}); toggleItemMenu('actMenu-${index}');" class="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-slate-700">✏️ Edit</button>
+                    <button onclick="event.stopPropagation(); handleDeleteActivity(${index}); toggleItemMenu('actMenu-${index}');" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 text-slate-900 font-semibold">🗑️ Delete</button>
+                  </div>
                 </div>
               </div>
-              <div class="title">${item.name}</div>
-              <div class="note">${item.note}</div>
+              <h4 class="text-xs font-bold text-slate-800 leading-tight">${item.name}</h4>
+              <p class="text-[11px] text-slate-400 mt-1">${item.note}</p>
             `;
 
             card.addEventListener('mouseenter', () => highlightMarker(item.id, true));
@@ -1034,26 +847,18 @@
 
             timelineEl.appendChild(card);
 
-            if (index < data.items.length - 1) {
-              const seg = document.createElement('div');
-              seg.className = 'segment-info';
-              seg.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 8 12 14 14"/></svg> Drive / Train 30 mins (15 km)`;
-              timelineEl.appendChild(seg);
-            }
-
             const customIcon = L.divIcon({
               className: 'custom-pin-container',
-              html: `<div id="marker-${item.id}" class="custom-pin">${item.id}</div>`,
-              iconSize: [30, 30],
-              iconAnchor: [15, 15]
+              html: `<div id="marker-${item.id}" class="custom-pin-bw">${item.id}</div>`,
+              iconSize: [32, 32],
+              iconAnchor: [16, 16]
             });
 
             const marker = L.marker(item.coords, { icon: customIcon }).addTo(markersGroup);
-            marker.bindPopup(`<b>${item.name}</b><br/>${item.time}`);
             marker.on('click', () => highlightCard(item.id));
           });
 
-          routeLine = L.polyline(latLngs, { color: '#0f172a', weight: 2.5, dashArray: '5, 5' }).addTo(map);
+          routeLine = L.polyline(latLngs, { color: '#0f172a', weight: 2.5, dashArray: '6, 6', opacity: 0.8 }).addTo(map);
           recenterMap();
         }
 
@@ -1066,77 +871,281 @@
         }
 
         function highlightCard(id) {
-          document.querySelectorAll('#timelineContainer .waypoint-card').forEach(c => c.classList.remove('card-active'));
+          document.querySelectorAll('#timelineContainer > div').forEach(c => c.classList.remove('card-active'));
           const card = document.getElementById(`card-${id}`);
-          if (card) card.classList.add('card-active');
+          if (card) {
+            card.classList.add('card-active');
+            card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
         }
 
         function focusMarker(id, coords) {
           highlightCard(id);
           highlightMarker(id, true);
-          map.flyTo(coords, 13, { duration: 0.8 });
+          map.flyTo(coords, 14, { duration: 0.8 });
         }
 
         function recenterMap() {
-          if (markersGroup.getLayers().length > 0) {
-            map.fitBounds(markersGroup.getBounds(), { padding: [30, 30] });
+          if (markersGroup && markersGroup.getLayers().length > 0) {
+            map.fitBounds(markersGroup.getBounds(), { padding: [40, 40] });
           }
         }
 
         function switchDay(day) { renderItinerary(day); }
 
-        function openAddDayModal() { openModal('dayModal'); }
-        function openEditDayModal() { openModal('dayModal'); }
+        function openAddDayModal() {
+          document.getElementById('dayFormMode').value = 'add';
+          document.getElementById('dayModalTitle').innerText = 'Add New Day';
+          document.getElementById('dayFormTitle').value = '';
+          openModal('dayModal');
+        }
+
+        function openEditDayModal() {
+          const d = tripData[currentDay];
+          document.getElementById('dayFormMode').value = 'edit';
+          document.getElementById('dayModalTitle').innerText = `Edit Day ${currentDay}`;
+          document.getElementById('dayFormDate').value = d.rawDate || '2026-10-15';
+          document.getElementById('dayFormTitle').value = d.title.replace(`DAY ${currentDay}: `, '');
+          openModal('dayModal');
+        }
 
         function handleSaveDay(event) {
           event.preventDefault();
+          const mode = document.getElementById('dayFormMode').value;
           const dateVal = document.getElementById('dayFormDate').value;
           const titleVal = document.getElementById('dayFormTitle').value;
           const formattedDate = new Date(dateVal).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 
-          totalDays++;
-          tripData[totalDays] = {
-            dateStr: formattedDate,
-            rawDate: dateVal,
-            title: titleVal || `Day ${totalDays}`,
-            items: []
-          };
-          closeModal('dayModal');
-          renderItinerary(totalDays);
+          if (mode === 'add') {
+            totalDays++;
+            tripData[totalDays] = { dateStr: formattedDate, rawDate: dateVal, title: titleVal ? `DAY ${totalDays}: ${titleVal.toUpperCase()}` : `DAY ${totalDays}: NEW ITINERARY`, items: [] };
+            closeModal('dayModal');
+            renderItinerary(totalDays);
+          } else {
+            tripData[currentDay].dateStr = formattedDate;
+            tripData[currentDay].rawDate = dateVal;
+            tripData[currentDay].title = titleVal ? `DAY ${currentDay}: ${titleVal.toUpperCase()}` : `DAY ${currentDay}: ITINERARY`;
+            closeModal('dayModal');
+            renderItinerary(currentDay);
+          }
         }
 
         function handleDeleteCurrentDay() {
           if (Object.keys(tripData).length <= 1) return alert("Cannot delete the last remaining day.");
-          if (confirm("Delete current day?")) {
+          if (confirm(`Delete Day ${currentDay}?`)) {
             delete tripData[currentDay];
             const remaining = Object.keys(tripData).map(Number);
             renderItinerary(remaining[0]);
           }
         }
 
-        function openAddActivityModal() { openModal('activityModal'); }
-        function openEditActivityModal(index) { openModal('activityModal'); }
+        function openAddActivityModal() {
+          document.getElementById('actFormMode').value = 'add';
+          document.getElementById('activityModalTitle').innerText = 'Add Activity';
+          openModal('activityModal');
+        }
+
+        function openEditActivityModal(index) {
+          const item = tripData[currentDay].items[index];
+          document.getElementById('actFormMode').value = 'edit';
+          document.getElementById('actEditIndex').value = index;
+          document.getElementById('actTime').value = item.time;
+          document.getElementById('actCat').value = item.cat;
+          document.getElementById('actName').value = item.name;
+          document.getElementById('actNote').value = item.note;
+          openModal('activityModal');
+        }
 
         function handleSaveActivity(event) {
           event.preventDefault();
-          const time = document.getElementById('actTime').value;
-          const cat = document.getElementById('actCat').value;
-          const name = document.getElementById('actName').value;
-          const note = document.getElementById('actNote').value;
-          const coordsVal = document.getElementById('actPresetCoords').value.split(',').map(Number);
+          const mode = document.getElementById('actFormMode').value;
+          const index = parseInt(document.getElementById('actEditIndex').value);
+          const items = tripData[currentDay].items;
 
-          tripData[currentDay].items.push({ id: tripData[currentDay].items.length + 1, time, cat, name, note, coords: coordsVal });
+          const actData = {
+            id: mode === 'add' ? items.length + 1 : index + 1,
+            time: document.getElementById('actTime').value,
+            cat: document.getElementById('actCat').value,
+            name: document.getElementById('actName').value,
+            note: document.getElementById('actNote').value,
+            coords: document.getElementById('actPresetCoords').value.split(',').map(Number)
+          };
+
+          if (mode === 'add') items.push(actData);
+          else items[index] = actData;
+
           closeModal('activityModal');
           renderItinerary(currentDay);
         }
 
         function handleDeleteActivity(index) {
-          if (confirm("Delete this activity?")) {
+          if (confirm("Delete activity?")) {
             tripData[currentDay].items.splice(index, 1);
             renderItinerary(currentDay);
           }
         }
 
+        function renderExpenses() {
+          const container = document.getElementById('expensesContainer');
+          container.innerHTML = '';
+
+          expensesData.forEach((item, index) => {
+            const card = document.createElement('div');
+            card.className = "border border-slate-200/80 rounded-2xl p-4 bg-white hover:border-slate-800 transition relative";
+            
+            card.innerHTML = `
+              <div class="flex items-center justify-between mb-1.5">
+                <div class="flex items-center gap-2">
+                  <span class="w-5 h-5 rounded-full bg-slate-900 text-white text-[11px] font-bold flex items-center justify-center shrink-0">${index + 1}</span>
+                  <span class="text-xs font-bold text-slate-900">${item.amount}</span>
+                  <span class="text-[10px] bg-slate-100 text-slate-800 border border-slate-200 px-2 py-0.5 rounded-full font-semibold">${item.tag}</span>
+                </div>
+                
+                <div class="relative">
+                  <button onclick="toggleItemMenu('expMenu-${index}')" class="p-1 text-slate-400 hover:text-slate-700 font-bold text-xs rounded">•••</button>
+                  <div id="expMenu-${index}" class="hidden absolute right-0 top-6 w-28 bg-white border border-slate-200 rounded-xl shadow-md z-30 py-1 text-xs">
+                    <button onclick="openEditExpenseModal(${index}); toggleItemMenu('expMenu-${index}');" class="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-slate-700">✏️ Edit</button>
+                    <button onclick="handleDeleteExpense(${index}); toggleItemMenu('expMenu-${index}');" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 text-slate-900 font-semibold">🗑️ Delete</button>
+                  </div>
+                </div>
+              </div>
+              <h4 class="text-xs font-bold text-slate-800 leading-tight">${item.name}</h4>
+              <p class="text-[11px] text-slate-500 mt-1">Converted: <strong class="text-slate-900">${item.thb}</strong></p>
+            `;
+            container.appendChild(card);
+          });
+        }
+
+        function openAddExpenseModal() {
+          document.getElementById('expFormMode').value = 'add';
+          document.getElementById('expModalTitle').innerText = 'Add Expense Item';
+          document.getElementById('expName').value = '';
+          document.getElementById('expAmount').value = '';
+          document.getElementById('expTHB').value = '';
+          document.getElementById('expTag').value = 'Group (Split)';
+          openModal('expenseModal');
+        }
+
+        function openEditExpenseModal(index) {
+          const item = expensesData[index];
+          document.getElementById('expFormMode').value = 'edit';
+          document.getElementById('expEditIndex').value = index;
+          document.getElementById('expModalTitle').innerText = 'Edit Expense Item';
+          document.getElementById('expName').value = item.name;
+          document.getElementById('expAmount').value = item.amount;
+          document.getElementById('expTHB').value = item.thb;
+          document.getElementById('expTag').value = item.tag;
+          openModal('expenseModal');
+        }
+
+        function handleSaveExpense(event) {
+          event.preventDefault();
+          const mode = document.getElementById('expFormMode').value;
+          const index = parseInt(document.getElementById('expEditIndex').value);
+
+          const expItem = {
+            id: mode === 'add' ? expensesData.length + 1 : index + 1,
+            name: document.getElementById('expName').value,
+            amount: document.getElementById('expAmount').value,
+            thb: document.getElementById('expTHB').value,
+            tag: document.getElementById('expTag').value
+          };
+
+          if (mode === 'add') expensesData.push(expItem);
+          else expensesData[index] = expItem;
+
+          closeModal('expenseModal');
+          renderExpenses();
+        }
+
+        function handleDeleteExpense(index) {
+          if (confirm("Delete this expense item?")) {
+            expensesData.splice(index, 1);
+            renderExpenses();
+          }
+        }
+
+        function renderTickets() {
+          const container = document.getElementById('ticketsContainer');
+          container.innerHTML = '';
+
+          ticketsData.forEach((item, index) => {
+            const card = document.createElement('div');
+            card.className = "border border-slate-200/80 rounded-2xl p-4 bg-white hover:border-slate-800 transition relative";
+            
+            card.innerHTML = `
+              <div class="flex items-center justify-between mb-1.5">
+                <div class="flex items-center gap-2">
+                  <span class="w-5 h-5 rounded-full bg-slate-900 text-white text-[11px] font-bold flex items-center justify-center shrink-0">${index + 1}</span>
+                  <span class="text-xs font-bold text-slate-900">${item.ref}</span>
+                  <span class="text-[10px] bg-slate-100 text-slate-800 border border-slate-200 px-2 py-0.5 rounded-full font-semibold">${item.tag}</span>
+                </div>
+                
+                <div class="relative">
+                  <button onclick="toggleItemMenu('tktMenu-${index}')" class="p-1 text-slate-400 hover:text-slate-700 font-bold text-xs rounded">•••</button>
+                  <div id="tktMenu-${index}" class="hidden absolute right-0 top-6 w-28 bg-white border border-slate-200 rounded-xl shadow-md z-30 py-1 text-xs">
+                    <button onclick="openEditTicketModal(${index}); toggleItemMenu('tktMenu-${index}');" class="w-full text-left px-3 py-1.5 hover:bg-slate-50 text-slate-700">✏️ Edit</button>
+                    <button onclick="handleDeleteTicket(${index}); toggleItemMenu('tktMenu-${index}');" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 text-slate-900 font-semibold">🗑️ Delete</button>
+                  </div>
+                </div>
+              </div>
+              <h4 class="text-xs font-bold text-slate-800 leading-tight">${item.title}</h4>
+              <p class="text-[11px] text-slate-400 mt-1">${item.note}</p>
+            `;
+            container.appendChild(card);
+          });
+        }
+
+        function openAddTicketModal() {
+          document.getElementById('ticketFormMode').value = 'add';
+          document.getElementById('ticketModalTitle').innerText = 'Add Booking Reference';
+          document.getElementById('ticketTitle').value = '';
+          document.getElementById('ticketTag').value = 'Flight';
+          document.getElementById('ticketRef').value = '';
+          document.getElementById('ticketNote').value = '';
+          openModal('ticketModal');
+        }
+
+        function openEditTicketModal(index) {
+          const item = ticketsData[index];
+          document.getElementById('ticketFormMode').value = 'edit';
+          document.getElementById('ticketEditIndex').value = index;
+          document.getElementById('ticketModalTitle').innerText = 'Edit Booking Reference';
+          document.getElementById('ticketTitle').value = item.title;
+          document.getElementById('ticketTag').value = item.tag;
+          document.getElementById('ticketRef').value = item.ref;
+          document.getElementById('ticketNote').value = item.note;
+          openModal('ticketModal');
+        }
+
+        function handleSaveTicket(event) {
+          event.preventDefault();
+          const mode = document.getElementById('ticketFormMode').value;
+          const index = parseInt(document.getElementById('ticketEditIndex').value);
+
+          const ticketItem = {
+            id: mode === 'add' ? ticketsData.length + 1 : index + 1,
+            title: document.getElementById('ticketTitle').value,
+            tag: document.getElementById('ticketTag').value,
+            ref: document.getElementById('ticketRef').value,
+            note: document.getElementById('ticketNote').value
+          };
+
+          if (mode === 'add') ticketsData.push(ticketItem);
+          else ticketsData[index] = ticketItem;
+
+          closeModal('ticketModal');
+          renderTickets();
+        }
+
+        function handleDeleteTicket(index) {
+          if (confirm("Delete this booking reference?")) {
+            ticketsData.splice(index, 1);
+            renderTickets();
+          }
+        }
+
+        // Initialize state
         updateHeaderState();
     </script>
 </body>
